@@ -1,7 +1,7 @@
 import './App.css';
-import { ChangeEvent, useState } from 'react';
+import { ChangeEvent, useEffect, useRef, useState } from 'react';
 import { Task } from './types/task';
-import { TASKS } from './data/tasks';
+import TaskDetail from './components/TaskDetail';
 
 /**
  * Component App
@@ -11,20 +11,39 @@ import { TASKS } from './data/tasks';
  *
  */
 export default function App() {
-  const [tasksArr, setTasksArr] = useState<Task[]>(TASKS);
+  const [tasksArr, setTasksArr] = useState<Task[]>([]);
   const [activeTaskId, setActiveTaskId] = useState<number | null>(null);
+  //useRef to avoid making extra fetch to API for data
+  const fetched = useRef(false);
 
-  const activeTask = tasksArr.find(t => activeTaskId === t.id)
+  useEffect(()=>{
+      async function fetchTasks() {
+        try{
+          const data = await fetch(`http://localhost:3000/tasks`);
+          const jsonData = await data.json();
+          setTasksArr(jsonData)
+          fetched.current = true;
+        }catch(error){
+          console.error('Error fetching tasks', error)
+        }
+      }
+      if (!fetched.current) {
+        fetchTasks()
+      }
+
+  },[])
+
+  const activeTask = tasksArr.find(t => activeTaskId === t.id);
 
   //Handles updating state when title is changed in input field
   function handleTitleChange(e: ChangeEvent<HTMLInputElement>) {
     const updatedTitle = e.target.value;
     setTasksArr(prevTasks => prevTasks.map(t => {
       if (t.id === activeTaskId) {
-        return {...t, title: updatedTitle}
+        return { ...t, title: updatedTitle };
       }
-      return t
-    }) )
+      return t;
+    }));
   }
 
   function handleSelectTask(id: number) {
@@ -32,8 +51,8 @@ export default function App() {
   }
 
   return (
-    <div className='container mt-7 p-4 mx-auto bg-[#d4dffb]'>
-      <h2 className="text-4xl text-[#ec1831] underline decoration-indigo-500/30">Study Plan</h2>
+    <div className='container mt-7 p-7 mx-auto bg-[#d4dffb]'>
+      <h2 className="text-5xl text-[#ec1831] underline decoration-indigo-500/30 text-center">Study Hall</h2>
       <ul className="flex flex-col gap-2 my-3">
         {tasksArr.map(t => (
           <li key={t.id} className='flex m-1 cursor-pointer' onClick={() => handleSelectTask(t.id)}>
@@ -43,39 +62,8 @@ export default function App() {
         ))}
       </ul>
       {activeTask &&
-      <>
-      <h2 className='text-3xl text-[#ec1831] mb-2 p-1'>Details</h2>
-      <div>
-        <span className='text-[#ec1831]'>ID: </span>{activeTask.id}
-      </div>
-      <div className="space-x-2">
-        <span className="text-[#ec1831]">Title:</span>
-        <span className="uppercase">{activeTask.title}</span>
-      </div>
-      <div>
-        <div className='flex'>
-          <span className='text-[#ec1831]'>Time Commitment:</span>
-          <span className='ml-1 mr-1'>{activeTask.time}</span>
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-4">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-          </svg>
-        </div>
-
-      </div>
-      <div className="flex flex-col gap-2 mt-4 border-t">
-        <label className='text-2xl text-[#ec1831]'>Task Title</label>
-        <input
-          placeholder='title'
-          className='border border-[#2e3192] rounded-lg p-2 w-1/4'
-          value={activeTask.title}
-          onChange={handleTitleChange}
-        />
-           </div>
-        </>
+        <TaskDetail task={activeTask} titleChange={handleTitleChange} />
       }
-
-
-
 
     </div>
   );
