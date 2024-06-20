@@ -100,3 +100,21 @@ Distributed under the MIT License. See `LICENSE.txt` for more information.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
+### Getting Started
+1. Clone the repo
+ ```
+git clone https://github.com/eewwalker/STUDY_HALL.git
+```
+2. From the root directory of the project, run:
+```
+npm install
+```
+3. Start Vite server
+```
+npm run dev
+```
+4. Start backend JSON server
+```
+npx json-server ./src/data/tasks.json
+```
+
